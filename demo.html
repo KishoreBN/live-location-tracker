@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>🚴 Driver Live Tracking</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #f9f9f9;
+    }
+    #map {
+      height: 500px;
+      width: 85%;
+      margin-top: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.2);
+    }
+    button {
+      margin-top: 20px;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 8px;
+      font-size: 15px;
+      background: #007BFF;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h2>🚕 Live Tracking: Dominos → Home</h2>
+  <div id="map"></div>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    // Initialize map
+    var map = L.map('map').setView([13.053977, 77.507495], 15);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Source and Destination markers
+    var srcMarker = L.marker([13.053977, 77.507495]).addTo(map).bindPopup("🚖 Source: Dominos").openPopup();
+    var destMarker = L.marker([13.062593, 77.499054]).addTo(map).bindPopup("🏁 Destination: Home");
+
+    // Bike Icon
+    var bikeIcon = L.divIcon({
+  html: "<div style='font-size: 40px;'>🏎️</div>",  // increase font-size here
+  className: "", // no extra leaflet styles
+  iconSize: [40, 40],  // control how Leaflet handles the box
+  iconAnchor: [40, 40] // keep the emoji centered
+});     
+
+    // Driver Marker (initialized at source)
+    var driverMarker = L.marker([13.053977, 77.507495], {icon: bikeIcon}).addTo(map).bindPopup("🚕 Driver");
+
+    // Driver Path (your provided coords)
+    var driverPath = [
+      [13.053977, 77.507495],  // Start: Dominos, Vidyaranyapura
+      [13.054200, 77.507554],  // Turn onto main road
+      [13.054319, 77.507549],  // Continue on main road
+      [13.054597, 77.507508],  // Intersection
+      [13.054866, 77.507492],  // Major junction
+      [13.055150, 77.507450],  // Continue straight
+      [13.055413, 77.507414],  // Approaching destination
+      [13.056536, 77.507274],  // Near destination
+      [13.056887, 77.507188],  // Final turn
+      [13.057271, 77.507102],   // Destination: Home
+        [13.057429253099714, 77.50706444311308],
+        [13.057716, 77.507030],
+        [13.057893, 77.506994],
+        [13.058275, 77.506958],
+        [13.058523, 77.506928],
+        [13.059094, 77.506926],
+        [13.059439, 77.506915],
+        [13.059753, 77.506896],
+        [13.059985, 77.506861],
+        [13.060024, 77.506610],
+        [13.060060994386744, 77.50628529572975],
+        [13.060106, 77.505901],
+        [13.060143, 77.505547],
+        [13.060209, 77.505055],
+        [13.060240, 77.504776],
+        [13.060280, 77.504446],
+        [13.060327, 77.504138],
+        [13.060390, 77.503619],
+        [13.060427, 77.503322],
+        [13.060493, 77.502856],
+        [13.060572, 77.502367],
+        [13.060607, 77.502059],
+        [13.060668, 77.501627],
+        [13.060715, 77.501247],
+        [13.060779, 77.500789],
+        [13.061038, 77.500843],
+        [13.061278, 77.500914],
+        [13.061578, 77.500980],
+        [13.061836, 77.501049],
+        [13.062085, 77.501108],
+        [13.062361, 77.501156],
+        [13.062448, 77.500820],
+        [13.062544, 77.500518],
+        [13.062612, 77.500221],
+        [13.062836, 77.499932],
+        [13.062909, 77.499772],
+        [13.062745, 77.499408],
+        [13.062593, 77.499054]
+    ];
+
+    // Draw the path on the map (polyline)
+    var polyline = L.polyline(driverPath, {color: "blue", weight: 8, opacity: 0.9}).addTo(map);
+
+    var currentIndex = 0;
+    var intervalId;
+    const socket = new WebSocket("ws://localhost:8081/ws"); // replace with your backend WS URL
+
+    socket.onopen = () => {
+      console.log("✅ WebSocket connected");
+    };
+
+    socket.onmessage = (event) => {
+      try {
+        // Assume backend sends: { "lat": 13.056, "lng": 77.505 }
+        let data = JSON.parse(event.data);
+        if (data?.latitude && data?.longitude) {
+          driverMarker.setLatLng([data?.latitude, data?.longitude]);
+          map.setView([data?.latitude, data?.longitude], 16);
+        }
+      } catch (err) {
+        console.error("Invalid WS message", err);
+      }
+    };
+
+    socket.onclose = () => {
+      console.log("❌ WebSocket closed");
+    };
+    
+  </script>
+</body>
+</html>
