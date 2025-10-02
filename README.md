@@ -9,11 +9,18 @@ The project demonstrates how to ingest driver location data, stream it using **K
 
 ![High-level Design](./High-level-design.png)
 
-- **Delivery Agent (Driver App)** → Sends GPS coordinates via WebSocket.  
-- **Producer Service (gps-ingestion-service)** → Publishes location updates to Kafka topic.  
-- **Kafka Cluster** → Handles event streaming across partitions.  
-- **Consumer Service (tracking-websocket-service)** → Consumes messages and forwards them to WebSocket clients.  
-- **Frontend (demo.html)** → Displays source, destination, and live driver movement on a map.
+---
+
+## ⚙️ How it Works
+
+1. 🚴 **Delivery Agent** periodically updates his location → sent to **gps-ingestion-service**.  
+2. 📡 **gps-ingestion-service** acts as a **Kafka Producer** → pushes these messages to **Kafka Broker**.  
+3. 🎧 **tracking-websocket-service** (Kafka Consumer) continuously listens for new messages.  
+4. 🌍 Whenever a new message arrives, the service pushes it to the **end user via WebSocket**, giving **real-time tracking**.  
+5. 🔄 Kafka messages can also be consumed by **other services** in parallel for:  
+   - ETA calculation  
+   - Push notifications  
+   - Analytics & reporting  
 
 ---
 
@@ -48,3 +55,9 @@ The project demonstrates how to ingest driver location data, stream it using **K
 
 ---
 
+## 🚀 Getting Started
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/KishoreBN/live-location-tracker.git
+cd live-location-tracker
